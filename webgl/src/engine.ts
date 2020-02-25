@@ -7,7 +7,7 @@ namespace TSE {
          * 构造函数
          */
         public constructor() {
-            console.log("hello world")
+            console.log("Engine initialized")
         }
 
         private _count: number = 0;

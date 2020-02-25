@@ -18,7 +18,7 @@ var TSE;
          */
         constructor() {
             this._count = 0;
-            console.log("hello world");
+            console.log("Engine initialized");
         }
         /**
          * 启动函数
