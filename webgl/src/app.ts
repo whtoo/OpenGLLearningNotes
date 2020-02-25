@@ -1,4 +1,9 @@
+var engine : TSE.Engine
+
 window.onload = function() {
-    var engine = new TSE.Engine();
-    engine.start();
+    engine = new TSE.Engine()
+    engine.start()
+}
+window.onresize = function() {
+    engine.resize()
 }
