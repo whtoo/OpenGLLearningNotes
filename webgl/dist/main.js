@@ -26,8 +26,12 @@ var TSE;
         start() {
             this._canvas = TSE.GLUtilities.initialize();
             TSE.gl.clearColor(1, 0, 0, 1);
+            /// Draw flow
             this.loadShaders();
             this._shader.use();
+            this.createBuffer();
+            this.resize();
+            /// Loop start
             this.loop();
         }
         resize() {
@@ -35,11 +39,16 @@ var TSE;
                 this._canvas.width = window.innerWidth;
                 this._canvas.height = window.innerHeight;
             }
+            TSE.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         }
         loop() {
             this._count++;
             document.title = this._count.toString();
             TSE.gl.clear(TSE.gl.COLOR_BUFFER_BIT);
+            TSE.gl.bindBuffer(TSE.gl.ARRAY_BUFFER, this._buffer);
+            TSE.gl.vertexAttribPointer(0, 3, TSE.gl.FLOAT, false, 0, 0);
+            TSE.gl.enableVertexAttribArray(0);
+            TSE.gl.drawArrays(TSE.gl.TRIANGLES, 0, 3);
             requestAnimationFrame(this.loop.bind(this));
         }
         loadShaders() {
@@ -58,6 +67,21 @@ var TSE;
             }
             `;
             this._shader = new TSE.Shader('base', vertexShaderSource, fragmentShaderSource);
+        }
+        createBuffer() {
+            this._buffer = TSE.gl.createBuffer();
+            let vertices = [
+                // x,y,z
+                0, 0, 0,
+                0, 0.5, 0,
+                0.5, 0.5, 0
+            ];
+            TSE.gl.bindBuffer(TSE.gl.ARRAY_BUFFER, this._buffer);
+            TSE.gl.vertexAttribPointer(0, 3, TSE.gl.FLOAT, false, 0, 0);
+            TSE.gl.enableVertexAttribArray(0);
+            TSE.gl.bufferData(TSE.gl.ARRAY_BUFFER, new Float32Array(vertices), TSE.gl.STATIC_DRAW);
+            TSE.gl.bindBuffer(TSE.gl.ARRAY_BUFFER, undefined);
+            TSE.gl.disableVertexAttribArray(0);
         }
     }
     TSE.Engine = Engine;
