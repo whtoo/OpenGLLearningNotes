@@ -18,7 +18,7 @@ var buildTS = function () {
         .pipe(tsProject())
         .js.pipe(concat('main.js')).pipe(gulp.dest("dist"));
 };
-var buildHtml = function () {
+var buildHtml = async function () {
     return gulp.src("src/index.html")
         .pipe(gulp.dest("dist"));
 };
@@ -34,9 +34,13 @@ var browser = function(){
         // proxy: "你的域名或IP"    // 设置代理
     });
 }
-gulp.watch("src/*.ts").on('change',function(event) {
+gulp.watch("src/*.ts").on('change',async function(event) {
     buildTS();
-    buildHtml();
-    browserSync.reload();
+    try {
+        await buildHtml();
+        browserSync.reload();
+    } catch (error) {
+        console.log(error)
+    }
 })
 gulp.task("default",series([cleanFunc,buildTS,buildHtml,browser]))
