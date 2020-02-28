@@ -1,3 +1,337 @@
+var TSE;
+(function (TSE) {
+    TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED = "MESSAGE_ASSET_LOADER_ASSET_LOADED::";
+    class AssetManager {
+        constructor() {
+        }
+        static initialize() {
+            AssetManager._loaders.push(new TSE.ImageAssetLoader());
+        }
+        static registLoader(loader) {
+            AssetManager._loaders.push(loader);
+        }
+        static onAssetLoaded(asset) {
+            AssetManager._loadedAssets[asset.name] = asset;
+            TSE.Message.send(TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED + asset.name, this, asset);
+        }
+        static loadAsset(assetName) {
+            let extension = assetName.split('.').pop().toLowerCase();
+            for (const loader of AssetManager._loaders) {
+                if (loader.supportedExtensions.indexOf(extension) !== -1) {
+                    loader.loadAsset(assetName);
+                    return;
+                }
+            }
+            console.warn("Unable to load asset with extension" + extension + "because there is no loader associated with it");
+        }
+        static isAssetLoaded(assetName) {
+            return AssetManager._loadedAssets[assetName] !== undefined;
+        }
+        static getAsset(assetName) {
+            if (AssetManager.isAssetLoaded) {
+                return AssetManager._loadedAssets[assetName];
+            }
+            else {
+                AssetManager.loadAsset(assetName);
+            }
+            return undefined;
+        }
+    }
+    AssetManager._loaders = [];
+    AssetManager._loadedAssets = {};
+    TSE.AssetManager = AssetManager;
+})(TSE || (TSE = {}));
+
+
+
+
+var TSE;
+(function (TSE) {
+    /** Represents an image asset */
+    class ImageAsset {
+        /**
+         * Creates a new image asset.
+         * @param name The name of this asset.
+         * @param data The data of this asset.
+         */
+        constructor(name, data) {
+            this.name = name;
+            this.data = data;
+        }
+        /** The width of this image asset. */
+        get width() {
+            return this.data.width;
+        }
+        /** The height of this image asset. */
+        get height() {
+            return this.data.height;
+        }
+    }
+    TSE.ImageAsset = ImageAsset;
+    /** Represents an image asset loader. */
+    class ImageAssetLoader {
+        /** The extensions supported by this asset loader. */
+        get supportedExtensions() {
+            return ["png", "gif", "jpg"];
+        }
+        /**
+         * Loads an asset with the given name.
+         * @param assetName The name of the asset to be loaded.
+         */
+        loadAsset(assetName) {
+            let image = new Image();
+            image.onload = this.onImageLoaded.bind(this, assetName, image);
+            image.src = assetName;
+        }
+        onImageLoaded(assetName, image) {
+            console.log("onImageLoaded: assetName/image", assetName, image);
+            let asset = new ImageAsset(assetName, image);
+            TSE.AssetManager.onAssetLoaded(asset);
+        }
+    }
+    TSE.ImageAssetLoader = ImageAssetLoader;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    /** Represents a message which can be sent and processed across the system. */
+    class Message {
+        /**
+         * Creates a new message.
+         * @param code The code for this message, which is subscribed to and listened for.
+         * @param sender The class instance which sent this message.
+         * @param context Free-form context data to be included with this message.
+         * @param priority The priority of this message.
+         */
+        constructor(code, sender, context, priority = TSE.MessagePriority.NORMAL) {
+            this.code = code;
+            this.sender = sender;
+            this.context = context;
+            this.priority = priority;
+        }
+        /**
+         * Sends a normal-priority message with the provided parameters.
+         * @param code The code for this message, which is subscribed to and listened for.
+         * @param sender The class instance which sent this message.
+         * @param context Free-form context data to be included with this message.
+         */
+        static send(code, sender, context) {
+            TSE.MessageBus.post(new Message(code, sender, context, TSE.MessagePriority.NORMAL));
+        }
+        /**
+         * Sends a high-priority message with the provided parameters.
+         * @param code The code for this message, which is subscribed to and listened for.
+         * @param sender The class instance which sent this message.
+         * @param context Free-form context data to be included with this message.
+         */
+        static sendPriority(code, sender, context) {
+            TSE.MessageBus.post(new Message(code, sender, context, TSE.MessagePriority.HIGH));
+        }
+        /**
+         * Subscribes the provided handler to listen for the message code provided.
+         * @param code The code to listen for.
+         * @param handler The message handler to be called when a message containing the provided code is sent.
+         */
+        static subscribe(code, handler) {
+            TSE.MessageBus.addSubscription(code, handler);
+        }
+        /**
+         * Unsubscribes the provided handler from listening for the message code provided.
+         * @param code The code to no longer listen for.
+         * @param handler The message handler to unsubscribe.
+         */
+        static unsubscribe(code, handler) {
+            TSE.MessageBus.removeSubscription(code, handler);
+        }
+    }
+    TSE.Message = Message;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    /** The message manager responsible for sending messages across the system. */
+    class MessageBus {
+        /** Constructor hidden to prevent instantiation. */
+        constructor() {
+        }
+        /**
+         * Adds a subscription to the provided code using the provided handler.
+         * @param code The code to listen for.
+         * @param handler The handler to be subscribed.
+         */
+        static addSubscription(code, handler) {
+            if (MessageBus._subscriptions[code] === undefined) {
+                MessageBus._subscriptions[code] = [];
+            }
+            if (MessageBus._subscriptions[code].indexOf(handler) !== -1) {
+                console.warn("Attempting to add a duplicate handler to code: " + code + ". Subscription not added.");
+            }
+            else {
+                MessageBus._subscriptions[code].push(handler);
+            }
+        }
+        /**
+         * Removes a subscription to the provided code using the provided handler.
+         * @param code The code to no longer listen for.
+         * @param handler The handler to be unsubscribed.
+         */
+        static removeSubscription(code, handler) {
+            if (MessageBus._subscriptions[code] === undefined) {
+                console.warn("Cannot unsubscribe handler from code: " + code + " Because that code is not subscribed to.");
+                return;
+            }
+            let nodeIndex = MessageBus._subscriptions[code].indexOf(handler);
+            if (nodeIndex !== -1) {
+                MessageBus._subscriptions[code].splice(nodeIndex, 1);
+            }
+        }
+        /**
+         * Posts the provided message to the message system.
+         * @param message The message to be sent.
+         */
+        static post(message) {
+            console.log("Message posted:", message);
+            let handlers = MessageBus._subscriptions[message.code];
+            if (handlers === undefined) {
+                return;
+            }
+            for (let h of handlers) {
+                if (message.priority === TSE.MessagePriority.HIGH) {
+                    h.onMessage(message);
+                }
+                else {
+                    MessageBus._normalMessageQueue.push(new TSE.MessageSubscriptionNode(message, h));
+                }
+            }
+        }
+        /**
+         * Performs update routines on this message bus.
+         * @param time The delta time in milliseconds since the last update.
+         */
+        static update(time) {
+            if (MessageBus._normalMessageQueue.length === 0) {
+                return;
+            }
+            let messageLimit = Math.min(MessageBus._normalQueueMessagePerUpdate, MessageBus._normalMessageQueue.length);
+            for (let i = 0; i < messageLimit; ++i) {
+                let node = MessageBus._normalMessageQueue.pop();
+                node.handler.onMessage(node.message);
+            }
+        }
+    }
+    MessageBus._subscriptions = {};
+    MessageBus._normalQueueMessagePerUpdate = 10;
+    MessageBus._normalMessageQueue = [];
+    TSE.MessageBus = MessageBus;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    /** Represents message priorities. */
+    let MessagePriority;
+    (function (MessagePriority) {
+        /** Normal message priority, meaning the message is sent as soon as the queue allows. */
+        MessagePriority[MessagePriority["NORMAL"] = 0] = "NORMAL";
+        /** High message priority, meaning the message is sent immediately. */
+        MessagePriority[MessagePriority["HIGH"] = 1] = "HIGH";
+    })(MessagePriority = TSE.MessagePriority || (TSE.MessagePriority = {}));
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class MessageSubscriptionNode {
+        constructor(message, handler) {
+            this.message = message;
+            this.handler = handler;
+        }
+    }
+    TSE.MessageSubscriptionNode = MessageSubscriptionNode;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    const LEVEL = 0;
+    const BORDER = 0;
+    const TEMP_IMAGE_DATA = new Uint8Array([255, 255, 255, 255]);
+    class Texture {
+        constructor(name, width = 1, height = 1) {
+            this._isLoaded = false;
+            this._name = name;
+            this._width = width;
+            this._height = height;
+            this._handler = TSE.gl.createTexture();
+            this.bind();
+            TSE.gl.texImage2D(TSE.gl.TEXTURE_2D, LEVEL, TSE.gl.RGBA, 1, 1, BORDER, TSE.gl.RGBA, TSE.gl.UNSIGNED_BYTE, TEMP_IMAGE_DATA);
+            let asset = TSE.AssetManager.getAsset(this._name);
+            if (asset !== undefined) {
+                this.loadTextureFromAsset(asset);
+            }
+            else {
+                TSE.Message.subscribe(TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED + this._name, this);
+            }
+        }
+        get name() {
+            return this._name;
+        }
+        get isLoaded() {
+            return this._isLoaded;
+        }
+        get width() {
+            return this._width;
+        }
+        get height() {
+            return this._height;
+        }
+        destory() {
+            TSE.gl.deleteTexture(this._handler);
+        }
+        activateAndBind(textureUnit = 0) {
+            TSE.gl.activeTexture(TSE.gl.TEXTURE + textureUnit);
+            this.bind();
+        }
+        bind() {
+            TSE.gl.bindTexture(TSE.gl.TEXTURE_2D, this._handler);
+        }
+        unbind() {
+            TSE.gl.bindTexture(TSE.gl.TEXTURE_2D, undefined);
+        }
+        onMessage(message) {
+            if (message.code === TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED + this._name) {
+                this.loadTextureFromAsset(message.context);
+            }
+        }
+        loadTextureFromAsset(asset) {
+            this._width = asset.width;
+            this._handler = asset.height;
+            this.bind();
+            TSE.gl.texImage2D(TSE.gl.TEXTURE_2D, LEVEL, TSE.gl.RGBA, TSE.gl.RGBA, TSE.gl.UNSIGNED_BYTE, asset.data);
+            this._isLoaded = true;
+        }
+    }
+    TSE.Texture = Texture;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class TextureManager {
+        constructor() {
+        }
+    }
+    TextureManager._texture = {};
+    TSE.TextureManager = TextureManager;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class TextureReferenceNode {
+        constructor(texture) {
+            this.referenceCount = 1;
+            this.texture = texture;
+        }
+    }
+    TSE.TextureReferenceNode = TextureReferenceNode;
+})(TSE || (TSE = {}));
+
 var engine;
 window.onload = function () {
     engine = new TSE.Engine();
