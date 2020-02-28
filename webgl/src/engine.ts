@@ -64,6 +64,9 @@ namespace TSE {
             document.title = this._count.toString();
             gl.clear(gl.COLOR_BUFFER_BIT)
 
+            let colorPosition = this._shader.getUniformLocation('u_tint')
+            gl.uniform4f(colorPosition,1,0.5,1,1)
+
             this.updateMVPMatrix();
             
             this._sprite.draw(this._shader)
@@ -87,12 +90,12 @@ namespace TSE {
             let fragmentShaderSource = `
             precision mediump float;
             uniform vec4 u_tint;
-            uniform sampler2D u_diffuse;
+            uniform sampler2D u_sampler;
 
             varying vec2 v_texCoord;
 
             void main() {
-                gl_FragColor = u_tint * texture2D(u_diffuse,v_texCoord);
+                gl_FragColor = u_tint * texture2D(u_sampler,v_texCoord);
             }
             `
             this._shader = new Shader('base', vertexShaderSource, fragmentShaderSource)

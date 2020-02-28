@@ -135,24 +135,24 @@ var TSE;
         load() {
             this._buffer = new TSE.GLBuffer();
             let positionAttribute = new TSE.AttributeInfo();
-            positionAttribute.location = 0; //this._shader.getAttributeLocation("a_position")
+            positionAttribute.location = 0;
             positionAttribute.offset = 0;
             positionAttribute.size = 3;
             this._buffer.addAttributeLocation(positionAttribute);
-            let texCoordAttribute = new TSE.AttributeInfo();
-            texCoordAttribute.location = 1;
-            texCoordAttribute.offset = 3;
-            texCoordAttribute.size = 2;
-            this._buffer.addAttributeLocation(texCoordAttribute);
+            // let texCoordAttribute = new AttributeInfo()
+            // texCoordAttribute.location = 1
+            // texCoordAttribute.size = 2
+            // this._buffer.addAttributeLocation(texCoordAttribute)
             /// Drawing follow clockwise order
             let vertices = [
                 // x,y,z,u,v
-                0, 0, 0, 0, 0,
-                0, this._height, 0, 0, 1.0,
-                this._width, this._height, 0, 1.0, 1.0,
-                this._width, this._height, 0, 1.0, 1.0,
-                this._width, 0, 0, 1.0, 0,
-                0, 0, 0, 0, 0
+                // x, y, z , u, v
+                0, 0, 0,
+                0, this._height, 0,
+                this._width, this._height, 0,
+                this._width, this._height, 0,
+                this._width, 0, 0,
+                0, 0, 0
             ];
             this._buffer.pushBackData(vertices);
             this._buffer.upload();
@@ -164,9 +164,9 @@ var TSE;
         update() {
         }
         draw(shader) {
-            this._texture.activateAndBind(0);
-            let diffuseLocation = shader.getUniformLocation('u_diffuse');
-            TSE.gl.uniform1f(diffuseLocation, 0);
+            // this._texture.activateAndBind(0)
+            // let diffuseLocation = shader.getUniformLocation('u_sampler')
+            // gl.uniform1i(diffuseLocation,0)
             this._buffer.bind();
             this._buffer.draw();
         }
@@ -233,6 +233,8 @@ var TSE;
             this._count++;
             document.title = this._count.toString();
             TSE.gl.clear(TSE.gl.COLOR_BUFFER_BIT);
+            let colorPosition = this._shader.getUniformLocation('u_tint');
+            TSE.gl.uniform4f(colorPosition, 1, 0.5, 1, 1);
             this.updateMVPMatrix();
             this._sprite.draw(this._shader);
             requestAnimationFrame(this.loop.bind(this));
@@ -254,12 +256,12 @@ var TSE;
             let fragmentShaderSource = `
             precision mediump float;
             uniform vec4 u_tint;
-            uniform sampler2D u_diffuse;
+            uniform sampler2D u_sampler;
 
             varying vec2 v_texCoord;
 
             void main() {
-                gl_FragColor = u_tint * texture2D(u_diffuse,v_texCoord);
+                gl_FragColor = u_tint * texture2D(u_sampler,v_texCoord);
             }
             `;
             this._shader = new TSE.Shader('base', vertexShaderSource, fragmentShaderSource);
@@ -357,6 +359,7 @@ var TSE;
         checkError(funcName, flag) {
             if (TSE.gl.getError() !== TSE.gl.NO_ERROR) {
                 console.log(funcName, flag, TSE.gl.getError());
+                throw new Error("The " + funcName + ":::" + flag + "::" + TSE.gl.getError());
             }
         }
         /**
@@ -934,10 +937,27 @@ var TSE;
         }
         loadTextureFromAsset(asset) {
             this._width = asset.width;
-            this._handler = asset.height;
+            this._height = asset.height;
             this.bind();
             TSE.gl.texImage2D(TSE.gl.TEXTURE_2D, LEVEL, TSE.gl.RGBA, TSE.gl.RGBA, TSE.gl.UNSIGNED_BYTE, asset.data);
+            if (this.isPowerof2()) {
+                TSE.gl.generateMipmap(TSE.gl.TEXTURE_2D);
+            }
+            else {
+                // Do not generate a mip map and clamp wrapping to edge.
+                TSE.gl.texParameteri(TSE.gl.TEXTURE_2D, TSE.gl.TEXTURE_WRAP_S, TSE.gl.CLAMP_TO_EDGE);
+                TSE.gl.texParameteri(TSE.gl.TEXTURE_2D, TSE.gl.TEXTURE_WRAP_T, TSE.gl.CLAMP_TO_EDGE);
+            }
+            // TODO:  Set text ure filte r ing based on configuration.
+            TSE.gl.texParameteri(TSE.gl.TEXTURE_2D, TSE.gl.TEXTURE_MIN_FILTER, TSE.gl.NEAREST);
+            TSE.gl.texParameteri(TSE.gl.TEXTURE_2D, TSE.gl.TEXTURE_MAG_FILTER, TSE.gl.NEAREST);
             this._isLoaded = true;
+        }
+        isPowerof2() {
+            return (this.isValuePowerOf2(this._width) && this.isValuePowerOf2(this.height));
+        }
+        isValuePowerOf2(value) {
+            return (value & (value - 1)) == 0;
         }
     }
     TSE.Texture = Texture;

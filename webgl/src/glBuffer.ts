@@ -32,7 +32,8 @@ namespace TSE {
 
         private checkError(funcName:string,flag:string):void {
             if(gl.getError() !== gl.NO_ERROR){
-                console.log(funcName,flag,gl.getError)
+                console.log(funcName,flag,gl.getError())
+                throw new Error("The "+funcName +":::"+flag+"::"+gl.getError())
             }
         }
         /**

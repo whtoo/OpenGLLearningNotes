@@ -67,15 +67,36 @@ namespace TSE {
             }
         }
 
-        private loadTextureFromAsset(asset: ImageAsset) : void {
-            this._width = asset.width
-            this._handler = asset.height
+        private loadTextureFromAsset( asset: ImageAsset ): void {
+            this._width = asset.width;
+            this._height = asset.height;
 
-            this.bind()
+            this.bind();
 
-            gl.texImage2D(gl.TEXTURE_2D,LEVEL,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,asset.data)
+            gl.texImage2D( gl.TEXTURE_2D, LEVEL, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, asset.data );
 
-            this._isLoaded = true
+            if ( this.isPowerof2() ) {
+                gl.generateMipmap( gl.TEXTURE_2D );
+            } else {
+
+                // Do not generate a mip map and clamp wrapping to edge.
+                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
+            }
+
+            // TODO:  Set text ure filte r ing based on configuration.
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+
+            this._isLoaded = true;
+        }
+
+        private isPowerof2(): boolean {
+            return ( this.isValuePowerOf2( this._width ) && this.isValuePowerOf2( this.height ) );
+        }
+
+        private isValuePowerOf2( value: number ): boolean {
+            return ( value & ( value - 1 ) ) == 0;
         }
         
     }
