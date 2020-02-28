@@ -19,7 +19,7 @@ var buildTS = function () {
         .js.pipe(concat('main.js')).pipe(gulp.dest("dist"));
 };
 var buildHtml = async function () {
-    return gulp.src("src/index.html")
+    return gulp.src(["src/index.html","src/texturezero.png"])
         .pipe(gulp.dest("dist"));
 };
 

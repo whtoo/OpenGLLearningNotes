@@ -17,7 +17,7 @@ namespace TSE {
         private _sprite : Sprite
         private _projectionMatrix : Matrix4f
         private _modelMatrix : Matrix4f
-
+        private _previousTime : number
         /**
          * 启动函数
          */
@@ -27,13 +27,13 @@ namespace TSE {
             this._canvas = GLUtilities.initialize()
             AssetManager.initialize()
 
-            gl.clearColor(1, 0, 0, 1)
+            gl.clearColor(0.5, 0.5, 0.5, 1)
             /// Draw flow
             this.loadShaders()
             this._shader.use()
             this._projectionMatrix = Matrix4f.orthorthographic(0,this._canvas.clientWidth,0,this._canvas.clientHeight,-1,100)
             this._modelMatrix = Matrix4f.translation(new Vector3(200,0,0))
-            this._sprite = new Sprite("test",100,100,'texturezero.png')
+            this._sprite = new Sprite("test",'texturezero.png')
             this._sprite.load()
 
             this.resize()
@@ -62,15 +62,22 @@ namespace TSE {
         private loop(): void {
             this._count++;
             document.title = this._count.toString();
-            gl.clear(gl.COLOR_BUFFER_BIT)
+            let delta = performance.now() - this._previousTime;
 
+            this.update( delta );
+            /// Render cmd
+            gl.clear(gl.COLOR_BUFFER_BIT)
             let colorPosition = this._shader.getUniformLocation('u_tint')
             gl.uniform4f(colorPosition,1,0.5,1,1)
-
             this.updateMVPMatrix();
-            
             this._sprite.draw(this._shader)
+
+            this._previousTime = performance.now();
             requestAnimationFrame(this.loop.bind(this));
+        }
+
+        private update(delta: number) : void {
+            MessageBus.update(delta)
         }
 
         private loadShaders(): void {

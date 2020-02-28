@@ -39,7 +39,7 @@ namespace TSE {
         }
 
         public static getAsset(assetName:string):IAsset {
-            if(AssetManager.isAssetLoaded){
+            if(AssetManager.isAssetLoaded(assetName)){
                 return AssetManager._loadedAssets[assetName]
             } else {
                 AssetManager.loadAsset(assetName)

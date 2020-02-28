@@ -27,13 +27,13 @@ var TSE;
             TSE.MessageBus.update(0);
             this._canvas = TSE.GLUtilities.initialize();
             TSE.AssetManager.initialize();
-            TSE.gl.clearColor(1, 0, 0, 1);
+            TSE.gl.clearColor(0.5, 0.5, 0.5, 1);
             /// Draw flow
             this.loadShaders();
             this._shader.use();
             this._projectionMatrix = TSE.Matrix4f.orthorthographic(0, this._canvas.clientWidth, 0, this._canvas.clientHeight, -1, 100);
             this._modelMatrix = TSE.Matrix4f.translation(new TSE.Vector3(200, 0, 0));
-            this._sprite = new TSE.Sprite("test", 100, 100, 'texturezero.png');
+            this._sprite = new TSE.Sprite("test", 'texturezero.png');
             this._sprite.load();
             this.resize();
             /// Loop start
@@ -56,12 +56,19 @@ var TSE;
         loop() {
             this._count++;
             document.title = this._count.toString();
+            let delta = performance.now() - this._previousTime;
+            this.update(delta);
+            /// Render cmd
             TSE.gl.clear(TSE.gl.COLOR_BUFFER_BIT);
             let colorPosition = this._shader.getUniformLocation('u_tint');
             TSE.gl.uniform4f(colorPosition, 1, 0.5, 1, 1);
             this.updateMVPMatrix();
             this._sprite.draw(this._shader);
+            this._previousTime = performance.now();
             requestAnimationFrame(this.loop.bind(this));
+        }
+        update(delta) {
+            TSE.MessageBus.update(delta);
         }
         loadShaders() {
             let vertexShaderSource = `
@@ -408,7 +415,7 @@ var TSE;
          * @param width The width of this sprite
          * @param height The height of this sprite
          */
-        constructor(name, width = 100, height = 100, textureName) {
+        constructor(name, textureName, width = 100, height = 100) {
             this.position = new TSE.Vector3();
             this._name = name;
             this._width = width;
@@ -621,7 +628,7 @@ var TSE;
             return AssetManager._loadedAssets[assetName] !== undefined;
         }
         static getAsset(assetName) {
-            if (AssetManager.isAssetLoaded) {
+            if (AssetManager.isAssetLoaded(assetName)) {
                 return AssetManager._loadedAssets[assetName];
             }
             else {

@@ -14,7 +14,7 @@ namespace TSE {
  * @param width The width of this sprite
  * @param height The height of this sprite
  */
-        public constructor(name:string , width : number = 100, height : number = 100,textureName:string) {
+        public constructor(name:string ,textureName:string, width : number = 100, height : number = 100) {
             this._name = name
             this._width = width
             this._height = height
