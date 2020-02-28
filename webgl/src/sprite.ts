@@ -55,11 +55,12 @@ namespace TSE {
                 0, 0, 0,0,0,
                 0, this._height, 0,0,1.0,
                 this._width, this._height, 0,1.0,1.0,
-
+                
                 this._width,this._height,0,1.0,1.0,
                 this._width,0,0,1.0,0,
                 0,0,0,0,0
             ]
+
             this._buffer.pushBackData(vertices)
             this._buffer.upload()
             this._buffer.unbind()
@@ -76,7 +77,7 @@ namespace TSE {
             this._texture.activateAndBind(0)
             let diffuseLocation = shader.getUniformLocation('u_diffuse')
             gl.uniform1f(diffuseLocation,0)
-            
+
             this._buffer.bind()
             this._buffer.draw()
         }
