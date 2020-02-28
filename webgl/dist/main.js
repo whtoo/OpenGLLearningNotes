@@ -44,16 +44,20 @@ var TSE;
             }
             TSE.gl.viewport(0, 0, TSE.gl.drawingBufferWidth, TSE.gl.drawingBufferHeight);
         }
+        updateMVPMatrix() {
+            this._projectionMatrix = TSE.Matrix4f.orthorthographic(0, this._canvas.clientWidth, 0, this._canvas.clientHeight, -1, 100);
+            let projectionPos = this._shader.getUniformLocation('u_projection');
+            TSE.gl.uniformMatrix4fv(projectionPos, false, new Float32Array(this._projectionMatrix.data));
+            let modelMatrix = this._shader.getUniformLocation('u_model');
+            TSE.gl.uniformMatrix4fv(modelMatrix, false, new Float32Array(this._modelMatrix.data));
+        }
         loop() {
             this._count++;
             document.title = this._count.toString();
             TSE.gl.clear(TSE.gl.COLOR_BUFFER_BIT);
             let colorPosition = this._shader.getUniformLocation('u_color');
             TSE.gl.uniform4f(colorPosition, 1, 0.5, 0, 1);
-            let projectionPos = this._shader.getUniformLocation('u_projection');
-            TSE.gl.uniformMatrix4fv(projectionPos, false, new Float32Array(this._projectionMatrix.data));
-            let modelMatrix = this._shader.getUniformLocation('u_model');
-            TSE.gl.uniformMatrix4fv(modelMatrix, false, new Float32Array(this._modelMatrix.data));
+            this.updateMVPMatrix();
             this._sprite.draw();
             requestAnimationFrame(this.loop.bind(this));
         }

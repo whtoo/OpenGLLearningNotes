@@ -44,6 +44,17 @@ namespace TSE {
             }
             gl.viewport(0, 0,  gl.drawingBufferWidth, gl.drawingBufferHeight);
         }
+
+        private updateMVPMatrix() : void {
+            this._projectionMatrix = Matrix4f.orthorthographic(0,this._canvas.clientWidth,0,this._canvas.clientHeight,-1,100)
+
+            let projectionPos = this._shader.getUniformLocation('u_projection')
+            gl.uniformMatrix4fv(projectionPos,false,new Float32Array(this._projectionMatrix.data))
+            
+            let modelMatrix = this._shader.getUniformLocation('u_model')
+            gl.uniformMatrix4fv(modelMatrix,false,new Float32Array(this._modelMatrix.data))
+        }
+
         private loop(): void {
             this._count++;
             document.title = this._count.toString();
@@ -51,11 +62,7 @@ namespace TSE {
             let colorPosition = this._shader.getUniformLocation('u_color');
             gl.uniform4f(colorPosition, 1, 0.5, 0, 1)
 
-            let projectionPos = this._shader.getUniformLocation('u_projection')
-            gl.uniformMatrix4fv(projectionPos,false,new Float32Array(this._projectionMatrix.data))
-            
-            let modelMatrix = this._shader.getUniformLocation('u_model')
-            gl.uniformMatrix4fv(modelMatrix,false,new Float32Array(this._modelMatrix.data))
+            this.updateMVPMatrix();
             
             this._sprite.draw()
             requestAnimationFrame(this.loop.bind(this));
