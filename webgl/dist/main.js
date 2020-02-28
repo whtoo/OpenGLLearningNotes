@@ -1,179 +1,3 @@
-var TSE;
-(function (TSE) {
-    /**
-     * Represents a WebGL shader
-     */
-    class Shader {
-        /**
-         *
-         * @param name
-         * @param vertexSrc
-         * @param fragmentSrc
-         */
-        constructor(name, vertexSrc, fragmentSrc) {
-            /// 字典存储
-            this._attributes = {};
-            this._uniforms = {};
-            this._name = name;
-            /// 1. create shaders both vertex and fragment
-            let vertexShader = this.loadShader(vertexSrc, TSE.gl.VERTEX_SHADER);
-            let fragmentShader = this.loadShader(fragmentSrc, TSE.gl.FRAGMENT_SHADER);
-            /// 2. bind them to program and compile and link
-            this.createProgram(vertexShader, fragmentShader);
-            this.detectAttributes();
-            this.detectUniforms();
-        }
-        /**
-         * Get shader's name
-         * @param name The name of shader
-         */
-        get name() {
-            return this._name;
-        }
-        /**
-         * Use this shader
-         */
-        use() {
-            TSE.gl.useProgram(this._program);
-        }
-        loadShader(source, shaderType) {
-            let shader = TSE.gl.createShader(shaderType);
-            /// bind source to shader
-            TSE.gl.shaderSource(shader, source);
-            /// compile shader
-            TSE.gl.compileShader(shader);
-            let error = TSE.gl.getShaderInfoLog(shader).trim();
-            if (error !== "") {
-                throw new Error("Error compiling shader" + this._name + ":" + error + "shaderType " + " " + source);
-            }
-            return shader;
-        }
-        createProgram(vertexShader, fragmentShader) {
-            this._program = TSE.gl.createProgram();
-            TSE.gl.attachShader(this._program, vertexShader);
-            TSE.gl.attachShader(this._program, fragmentShader);
-            TSE.gl.linkProgram(this._program);
-            let error = TSE.gl.getProgramInfoLog(this._program).trim();
-            if (error !== "") {
-                throw new Error("Error linking shader " + this._name + ":" + error);
-            }
-        }
-        /**
-         * 查询属性的slot
-         */
-        detectAttributes() {
-            let attributeCount = TSE.gl.getProgramParameter(this._program, TSE.gl.ACTIVE_ATTRIBUTES);
-            for (let i = 0; i < attributeCount; ++i) {
-                let info = TSE.gl.getActiveAttrib(this._program, i);
-                if (!info) {
-                    break;
-                }
-                this._attributes[info.name] = TSE.gl.getAttribLocation(this._program, info.name);
-            }
-        }
-        /**
-         * 获取具有提供名称的属性的location
-         * @param name 要检索location的属性名称
-         */
-        getAttributeLocation(name) {
-            if (this._attributes[name] === undefined) {
-                throw new Error(`Unable to find attribute named '${name}' in shader named '${this._name}'`);
-            }
-            return this._attributes[name];
-        }
-        /**
-         * Gets the locaiton of an uniform with the provided name.
-         * @param name The name of the uniform whose location to retrieve
-         */
-        getUniformLocation(name) {
-            if (this._uniforms[name] === undefined) {
-                throw new Error(`Unable to find uniform named '${name}' in shader named '${this._name}'`);
-            }
-            return this._uniforms[name];
-        }
-        detectUniforms() {
-            let uniformCount = TSE.gl.getProgramParameter(this._program, TSE.gl.ACTIVE_UNIFORMS);
-            for (let i = 0; i < uniformCount; ++i) {
-                let info = TSE.gl.getActiveUniform(this._program, i);
-                if (!info) {
-                    break;
-                }
-                this._uniforms[info.name] = TSE.gl.getUniformLocation(this._program, info.name);
-            }
-        }
-    }
-    TSE.Shader = Shader;
-})(TSE || (TSE = {}));
-
-var TSE;
-(function (TSE) {
-    class Sprite {
-        /**
-         *
-         * @param name The name of the material to  use with this sprite
-         * @param width The width of this sprite
-         * @param height The height of this sprite
-         */
-        constructor(name, width = 100, height = 100, textureName) {
-            this.position = new TSE.Vector3();
-            this._name = name;
-            this._width = width;
-            this._height = height;
-            this._textureName = textureName;
-            this._texture = TSE.TextureManager.getTexture(textureName);
-        }
-        get textureName() {
-            return this._textureName;
-        }
-        get name() {
-            return this._name;
-        }
-        destroy() {
-            this._buffer.destroy();
-            TSE.TextureManager.releaseTexture(this.textureName);
-        }
-        load() {
-            this._buffer = new TSE.GLBuffer();
-            let positionAttribute = new TSE.AttributeInfo();
-            positionAttribute.location = 0;
-            positionAttribute.offset = 0;
-            positionAttribute.size = 3;
-            this._buffer.addAttributeLocation(positionAttribute);
-            // let texCoordAttribute = new AttributeInfo()
-            // texCoordAttribute.location = 1
-            // texCoordAttribute.size = 2
-            // this._buffer.addAttributeLocation(texCoordAttribute)
-            /// Drawing follow clockwise order
-            let vertices = [
-                // x,y,z,u,v
-                // x, y, z , u, v
-                0, 0, 0,
-                0, this._height, 0,
-                this._width, this._height, 0,
-                this._width, this._height, 0,
-                this._width, 0, 0,
-                0, 0, 0
-            ];
-            this._buffer.pushBackData(vertices);
-            this._buffer.upload();
-            this._buffer.unbind();
-        }
-        /**
-        * update
-        */
-        update() {
-        }
-        draw(shader) {
-            // this._texture.activateAndBind(0)
-            // let diffuseLocation = shader.getUniformLocation('u_sampler')
-            // gl.uniform1i(diffuseLocation,0)
-            this._buffer.bind();
-            this._buffer.draw();
-        }
-    }
-    TSE.Sprite = Sprite;
-})(TSE || (TSE = {}));
-
 var engine;
 window.onload = function () {
     engine = new TSE.Engine();
@@ -466,6 +290,183 @@ var TSE;
         }
     }
     TSE.GLBuffer = GLBuffer;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    /**
+     * Represents a WebGL shader
+     */
+    class Shader {
+        /**
+         *
+         * @param name
+         * @param vertexSrc
+         * @param fragmentSrc
+         */
+        constructor(name, vertexSrc, fragmentSrc) {
+            /// 字典存储
+            this._attributes = {};
+            this._uniforms = {};
+            this._name = name;
+            /// 1. create shaders both vertex and fragment
+            let vertexShader = this.loadShader(vertexSrc, TSE.gl.VERTEX_SHADER);
+            let fragmentShader = this.loadShader(fragmentSrc, TSE.gl.FRAGMENT_SHADER);
+            /// 2. bind them to program and compile and link
+            this.createProgram(vertexShader, fragmentShader);
+            this.detectAttributes();
+            this.detectUniforms();
+        }
+        /**
+         * Get shader's name
+         * @param name The name of shader
+         */
+        get name() {
+            return this._name;
+        }
+        /**
+         * Use this shader
+         */
+        use() {
+            TSE.gl.useProgram(this._program);
+        }
+        loadShader(source, shaderType) {
+            let shader = TSE.gl.createShader(shaderType);
+            /// bind source to shader
+            TSE.gl.shaderSource(shader, source);
+            /// compile shader
+            TSE.gl.compileShader(shader);
+            let error = TSE.gl.getShaderInfoLog(shader).trim();
+            if (error !== "") {
+                throw new Error("Error compiling shader" + this._name + ":" + error + "shaderType " + " " + source);
+            }
+            return shader;
+        }
+        createProgram(vertexShader, fragmentShader) {
+            this._program = TSE.gl.createProgram();
+            TSE.gl.attachShader(this._program, vertexShader);
+            TSE.gl.attachShader(this._program, fragmentShader);
+            TSE.gl.linkProgram(this._program);
+            let error = TSE.gl.getProgramInfoLog(this._program).trim();
+            if (error !== "") {
+                throw new Error("Error linking shader " + this._name + ":" + error);
+            }
+        }
+        /**
+         * 查询属性的slot
+         */
+        detectAttributes() {
+            let attributeCount = TSE.gl.getProgramParameter(this._program, TSE.gl.ACTIVE_ATTRIBUTES);
+            for (let i = 0; i < attributeCount; ++i) {
+                let info = TSE.gl.getActiveAttrib(this._program, i);
+                if (!info) {
+                    break;
+                }
+                this._attributes[info.name] = TSE.gl.getAttribLocation(this._program, info.name);
+            }
+        }
+        /**
+         * 获取具有提供名称的属性的location
+         * @param name 要检索location的属性名称
+         */
+        getAttributeLocation(name) {
+            if (this._attributes[name] === undefined) {
+                throw new Error(`Unable to find attribute named '${name}' in shader named '${this._name}'`);
+            }
+            return this._attributes[name];
+        }
+        /**
+         * Gets the locaiton of an uniform with the provided name.
+         * @param name The name of the uniform whose location to retrieve
+         */
+        getUniformLocation(name) {
+            if (this._uniforms[name] === undefined) {
+                throw new Error(`Unable to find uniform named '${name}' in shader named '${this._name}'`);
+            }
+            return this._uniforms[name];
+        }
+        detectUniforms() {
+            let uniformCount = TSE.gl.getProgramParameter(this._program, TSE.gl.ACTIVE_UNIFORMS);
+            for (let i = 0; i < uniformCount; ++i) {
+                let info = TSE.gl.getActiveUniform(this._program, i);
+                if (!info) {
+                    break;
+                }
+                this._uniforms[info.name] = TSE.gl.getUniformLocation(this._program, info.name);
+            }
+        }
+    }
+    TSE.Shader = Shader;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class Sprite {
+        /**
+         *
+         * @param name The name of the material to  use with this sprite
+         * @param width The width of this sprite
+         * @param height The height of this sprite
+         */
+        constructor(name, width = 100, height = 100, textureName) {
+            this.position = new TSE.Vector3();
+            this._name = name;
+            this._width = width;
+            this._height = height;
+            this._textureName = textureName;
+            this._texture = TSE.TextureManager.getTexture(textureName);
+        }
+        get textureName() {
+            return this._textureName;
+        }
+        get name() {
+            return this._name;
+        }
+        destroy() {
+            this._buffer.destroy();
+            TSE.TextureManager.releaseTexture(this.textureName);
+        }
+        load() {
+            this._buffer = new TSE.GLBuffer();
+            let positionArribute = new TSE.AttributeInfo();
+            positionArribute.location = 0;
+            positionArribute.offset = 0;
+            positionArribute.size = 3;
+            this._buffer.addAttributeLocation(positionArribute);
+            let texCoordArribute = new TSE.AttributeInfo();
+            texCoordArribute.location = 1;
+            texCoordArribute.offset = 3;
+            texCoordArribute.size = 2;
+            this._buffer.addAttributeLocation(texCoordArribute);
+            /// Drawing follow clockwise order
+            let vertices = [
+                // x,y,z,u,v
+                // x, y, z , u, v
+                0, 0, 0, 0, 0,
+                0, this._height, 0, 0, 1.0,
+                this._width, this._height, 0, 1.0, 1.0,
+                this._width, this._height, 0, 1.0, 1.0,
+                this._width, 0, 0, 1.0, 0,
+                0, 0, 0, 0, 0
+            ];
+            this._buffer.pushBackData(vertices);
+            this._buffer.upload();
+            this._buffer.unbind();
+        }
+        /**
+        * update
+        */
+        update() {
+        }
+        draw(shader) {
+            this._texture.activateAndBind(0);
+            let diffuseLocation = shader.getUniformLocation('u_sampler');
+            TSE.gl.uniform1i(diffuseLocation, 0);
+            this._buffer.bind();
+            this._buffer.draw();
+        }
+    }
+    TSE.Sprite = Sprite;
 })(TSE || (TSE = {}));
 
 var TSE;
@@ -888,16 +889,26 @@ var TSE;
     const LEVEL = 0;
     const BORDER = 0;
     const TEMP_IMAGE_DATA = new Uint8Array([255, 255, 255, 255]);
+    /**
+     * Represents a texture to be used in a material. These typically should not be created manually, but
+     * instead via the texture manager.
+     */
     class Texture {
+        /**
+         * Creates a new Texture.
+         * @param name The name of this texture.
+         * @param width The width of this texture.
+         * @param height The height of this texture.
+         */
         constructor(name, width = 1, height = 1) {
             this._isLoaded = false;
             this._name = name;
             this._width = width;
             this._height = height;
-            this._handler = TSE.gl.createTexture();
+            this._handle = TSE.gl.createTexture();
             this.bind();
             TSE.gl.texImage2D(TSE.gl.TEXTURE_2D, LEVEL, TSE.gl.RGBA, 1, 1, BORDER, TSE.gl.RGBA, TSE.gl.UNSIGNED_BYTE, TEMP_IMAGE_DATA);
-            let asset = TSE.AssetManager.getAsset(this._name);
+            let asset = TSE.AssetManager.getAsset(this.name);
             if (asset !== undefined) {
                 this.loadTextureFromAsset(asset);
             }
@@ -905,31 +916,48 @@ var TSE;
                 TSE.Message.subscribe(TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED + this._name, this);
             }
         }
+        /** The name of this texture. */
         get name() {
             return this._name;
         }
+        /** Indicates if this texture is loaded. */
         get isLoaded() {
             return this._isLoaded;
         }
+        /** The width of this  texture. */
         get width() {
             return this._width;
         }
+        /** The height of this texture. */
         get height() {
             return this._height;
         }
+        /** Destroys this texture. */
         destroy() {
-            TSE.gl.deleteTexture(this._handler);
+            if (this._handle) {
+                TSE.gl.deleteTexture(this._handle);
+            }
         }
+        /**
+         * Activates the provided texture unit and binds this texture.
+         * @param textureUnit The texture unit to activate on. Default: 0
+         */
         activateAndBind(textureUnit = 0) {
-            TSE.gl.activeTexture(TSE.gl.TEXTURE + textureUnit);
+            TSE.gl.activeTexture(TSE.gl.TEXTURE0 + textureUnit);
             this.bind();
         }
+        /** Binds this texture. */
         bind() {
-            TSE.gl.bindTexture(TSE.gl.TEXTURE_2D, this._handler);
+            TSE.gl.bindTexture(TSE.gl.TEXTURE_2D, this._handle);
         }
+        /** Binds this texture. */
         unbind() {
             TSE.gl.bindTexture(TSE.gl.TEXTURE_2D, undefined);
         }
+        /**
+         * The message handler.
+         * @param message The message to be handled.
+         */
         onMessage(message) {
             if (message.code === TSE.MESSAGE_ASSET_LOADER_ASSET_LOADED + this._name) {
                 this.loadTextureFromAsset(message.context);

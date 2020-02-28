@@ -36,28 +36,29 @@ namespace TSE {
         }
         
         public load():void {
-            this._buffer = new GLBuffer()
-            let positionAttribute = new AttributeInfo()
-            positionAttribute.location = 0
-            positionAttribute.offset = 0
-            positionAttribute.size = 3
-            this._buffer.addAttributeLocation(positionAttribute)
+            this._buffer = new GLBuffer();
+            let positionArribute = new AttributeInfo();
+            positionArribute.location = 0
+            positionArribute.offset = 0;
+            positionArribute.size = 3;
+            this._buffer.addAttributeLocation(positionArribute);
 
-            // let texCoordAttribute = new AttributeInfo()
-            // texCoordAttribute.location = 1
-            // texCoordAttribute.size = 2
-            // this._buffer.addAttributeLocation(texCoordAttribute)
+            let texCoordArribute = new AttributeInfo();
+            texCoordArribute.location = 1
+            texCoordArribute.offset = 3;
+            texCoordArribute.size = 2;
+            this._buffer.addAttributeLocation(texCoordArribute);
 
             /// Drawing follow clockwise order
             let vertices = [
                 // x,y,z,u,v
                 // x, y, z , u, v
-                0, 0, 0,
-                0, this._height, 0, 
-                this._width, this._height, 0, 
-                this._width, this._height, 0, 
-                this._width, 0, 0, 
-                0, 0, 0
+                0, 0, 0, 0 ,0 ,
+                0, this._height, 0, 0, 1.0, 
+                this._width, this._height, 0, 1.0, 1.0, 
+                this._width, this._height, 0, 1.0, 1.0, 
+                this._width, 0, 0, 1.0, 0,
+                0, 0, 0,  0, 0
             ]
 
             this._buffer.pushBackData(vertices)
@@ -73,9 +74,9 @@ namespace TSE {
         }
 
         public draw(shader:Shader) : void {
-            // this._texture.activateAndBind(0)
-            // let diffuseLocation = shader.getUniformLocation('u_sampler')
-            // gl.uniform1i(diffuseLocation,0)
+            this._texture.activateAndBind(0)
+            let diffuseLocation = shader.getUniformLocation('u_sampler')
+            gl.uniform1i(diffuseLocation,0)
 
             this._buffer.bind()
             this._buffer.draw()
