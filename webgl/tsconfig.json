@@ -2,8 +2,15 @@
     "include": [
         "src/*.ts","src/Assets/*.ts","src/Math/*.ts","src/Message/*.ts","src/Texture/*.ts", "src/Shaders/*.ts"
     ],
+    
     "compilerOptions": {
-        "noImplicitAny": true,
-        "target": "es6"
+        "noImplicitAny": false,
+        "target": "es6",
+        "esModuleInterop": true,
+        "baseUrl": ".",
+        "paths": {
+            "three":["node_modules/three/src/Three"],
+            "gl-matrix":["node_modules/gl-matrix/index"]
+        }
     }
 }
