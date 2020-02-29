@@ -18,6 +18,7 @@ namespace TSE {
         private _projectionMatrix : Matrix4f
         private _modelMatrix : Matrix4f
         private _previousTime : number
+
         /**
          * 启动函数
          */
