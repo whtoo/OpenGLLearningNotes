@@ -14,9 +14,11 @@ namespace TSE {
         public static indentity() : Matrix4f {
             return new Matrix4f()
         }
+        
         public get data() : number[] {
             return this._data
         }
+
         public static orthorthographic(left: number, right: number, bottom: number, top: number, nearClip: number, farClip: number): Matrix4f {
             let m = this.indentity()
             let rml = 1.0 / (left - right)

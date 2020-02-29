@@ -5,8 +5,8 @@ namespace TSE {
         protected _height : number
         protected _buffer : GLBuffer
         public position : Vector3 = new Vector3();
-        private _textureName : string
-        private _texture : Texture
+        private _materialName : string
+        private _material : Material
 
 /**
  * 
@@ -14,16 +14,16 @@ namespace TSE {
  * @param width The width of this sprite
  * @param height The height of this sprite
  */
-        public constructor(name:string ,textureName:string, width : number = 100, height : number = 100) {
+        public constructor(name:string ,materialName:string, width : number = 100, height : number = 100) {
             this._name = name
             this._width = width
             this._height = height
-            this._textureName = textureName
-            this._texture = TextureManager.getTexture(textureName)
+            this._materialName = materialName
+            this._material = MaterialManager.getMaterial(materialName)
         }
 
-        public get textureName() : string {
-            return this._textureName
+        public get materialName() : string {
+            return this._materialName
         }
 
         public get name() : string {
@@ -32,7 +32,9 @@ namespace TSE {
         
         public destroy() : void {
             this._buffer.destroy()
-            TextureManager.releaseTexture(this.textureName)
+            MaterialManager.releaseMaterial(this.materialName)
+            this._material = null;
+            this._materialName = null;
         }
         
         public load():void {
@@ -74,9 +76,18 @@ namespace TSE {
         }
 
         public draw(shader:BaseShader) : void {
-            this._texture.activateAndBind(0)
-            let diffuseLocation = shader.getUniformLocation('u_sampler')
-            gl.uniform1i(diffuseLocation,0)
+            let colorPos = shader.getUniformLocation('u_tint')
+            gl.uniform4fv(colorPos,this._material.tint.toFloat32Array())
+
+            let modelPos = shader.getUniformLocation('u_model')
+            gl.uniformMatrix4fv(modelPos,false,new Float32Array(Matrix4f.translation(this.position).data))
+
+
+            if (this._material.diffuseTexture !== undefined) {
+                this._material.diffuseTexture.activateAndBind(0);
+                let diffuseLocation = shader.getUniformLocation("u_sampler");
+                gl.uniform1i(diffuseLocation, 0);
+            }
 
             this._buffer.bind()
             this._buffer.draw()

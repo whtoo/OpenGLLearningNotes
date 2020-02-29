@@ -11,6 +11,7 @@
         "paths": {
             "three":["node_modules/three/src/Three"],
             "gl-matrix":["node_modules/gl-matrix/index"]
+            "orbitcontrols":["node_modules/three/examples/jsm/controls/OrbitControls"]
         }
     }
 }

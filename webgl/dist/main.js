@@ -32,7 +32,8 @@ var TSE;
             this.loadShaders();
             this._shader.use();
             this._projectionMatrix = TSE.Matrix4f.orthorthographic(0, this._canvas.clientWidth, 0, this._canvas.clientHeight, -1, 100);
-            this._sprite = new TSE.Sprite("test", 'texturezero.png');
+            TSE.MaterialManager.registerMaterial(new TSE.Material('zero', 'texturezero.png', new TSE.Color(255, 128, 0, 255)));
+            this._sprite = new TSE.Sprite("test", 'zero');
             this._sprite.position.x = 100;
             this._sprite.position.y = 200;
             this._modelMatrix = TSE.Matrix4f.translation(this._sprite.position);
@@ -52,8 +53,6 @@ var TSE;
             this._projectionMatrix = TSE.Matrix4f.orthorthographic(0, this._canvas.clientWidth, 0, this._canvas.clientHeight, -1, 100);
             let projectionPos = this._shader.getUniformLocation('u_projection');
             TSE.gl.uniformMatrix4fv(projectionPos, false, new Float32Array(this._projectionMatrix.data));
-            let modelMatrix = this._shader.getUniformLocation('u_model');
-            TSE.gl.uniformMatrix4fv(modelMatrix, false, new Float32Array(this._modelMatrix.data));
         }
         loop() {
             this._count++;
@@ -62,8 +61,6 @@ var TSE;
             this.update(delta);
             /// Render cmd
             TSE.gl.clear(TSE.gl.COLOR_BUFFER_BIT);
-            let colorPosition = this._shader.getUniformLocation('u_tint');
-            TSE.gl.uniform4f(colorPosition, 1, 1, 1, 1);
             this.updateMVPMatrix();
             this._sprite.draw(this._shader);
             this._previousTime = performance.now();
@@ -286,23 +283,25 @@ var TSE;
          * @param width The width of this sprite
          * @param height The height of this sprite
          */
-        constructor(name, textureName, width = 100, height = 100) {
+        constructor(name, materialName, width = 100, height = 100) {
             this.position = new TSE.Vector3();
             this._name = name;
             this._width = width;
             this._height = height;
-            this._textureName = textureName;
-            this._texture = TSE.TextureManager.getTexture(textureName);
+            this._materialName = materialName;
+            this._material = TSE.MaterialManager.getMaterial(materialName);
         }
-        get textureName() {
-            return this._textureName;
+        get materialName() {
+            return this._materialName;
         }
         get name() {
             return this._name;
         }
         destroy() {
             this._buffer.destroy();
-            TSE.TextureManager.releaseTexture(this.textureName);
+            TSE.MaterialManager.releaseMaterial(this.materialName);
+            this._material = null;
+            this._materialName = null;
         }
         load() {
             this._buffer = new TSE.GLBuffer();
@@ -337,9 +336,15 @@ var TSE;
         update() {
         }
         draw(shader) {
-            this._texture.activateAndBind(0);
-            let diffuseLocation = shader.getUniformLocation('u_sampler');
-            TSE.gl.uniform1i(diffuseLocation, 0);
+            let colorPos = shader.getUniformLocation('u_tint');
+            TSE.gl.uniform4fv(colorPos, this._material.tint.toFloat32Array());
+            let modelPos = shader.getUniformLocation('u_model');
+            TSE.gl.uniformMatrix4fv(modelPos, false, new Float32Array(TSE.Matrix4f.translation(this.position).data));
+            if (this._material.diffuseTexture !== undefined) {
+                this._material.diffuseTexture.activateAndBind(0);
+                let diffuseLocation = shader.getUniformLocation("u_sampler");
+                TSE.gl.uniform1i(diffuseLocation, 0);
+            }
             this._buffer.bind();
             this._buffer.draw();
         }
@@ -760,6 +765,162 @@ var TSE;
         }
     }
     TSE.MessageSubscriptionNode = MessageSubscriptionNode;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class Color {
+        constructor(r = 255, g = 255, b = 255, a = 255) {
+            this._r = r;
+            this._g = g;
+            this._b = b;
+            this._a = a;
+        }
+        get r() {
+            return this._r;
+        }
+        get rFloat() {
+            return this._r / 255.0;
+        }
+        set r(value) {
+            this._r = value;
+        }
+        get g() {
+            return this._g;
+        }
+        get gFloat() {
+            return this._g / 255.0;
+        }
+        set g(value) {
+            this._g = value;
+        }
+        get b() {
+            return this._b;
+        }
+        get bFloat() {
+            return this._b / 255.0;
+        }
+        set b(value) {
+            this._b = value;
+        }
+        get a() {
+            return this._r;
+        }
+        get aFloat() {
+            return this._a / 255.0;
+        }
+        set a(value) {
+            this._a = value;
+        }
+        toArray() {
+            return [this._r, this._g, this._b, this._a];
+        }
+        toFloatArray() {
+            return [this._r / 255.0, this._g / 255.0, this._b / 255.0, this._a / 255.0];
+        }
+        toFloat32Array() {
+            return new Float32Array(this.toFloatArray());
+        }
+        static white() {
+            return new Color(255, 255, 255, 255);
+        }
+        static black() {
+            return new Color(0, 0, 0, 255);
+        }
+        static red() {
+            return new Color(255, 0, 0, 255);
+        }
+        static green() {
+            return new Color(0, 255, 0, 255);
+        }
+        static blue() {
+            return new Color(0, 0, 255, 255);
+        }
+    }
+    TSE.Color = Color;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class Material {
+        constructor(name, diffuseTextureName, tint) {
+            this._name = name;
+            this._diffuseTextureName = diffuseTextureName;
+            this._tint = tint;
+            if (this._diffuseTextureName !== undefined) {
+                this._diffuseTexture = TSE.TextureManager.getTexture(this._diffuseTextureName);
+            }
+        }
+        get name() {
+            return this._name;
+        }
+        get diffuseTextureName() {
+            return this._diffuseTextureName;
+        }
+        get diffuseTexture() {
+            return this._diffuseTexture;
+        }
+        get tint() {
+            return this._tint;
+        }
+        set diffuseTextureName(value) {
+            if (this._diffuseTexture !== undefined) {
+                TSE.TextureManager.releaseTexture(this._diffuseTextureName);
+            }
+            this._diffuseTextureName = value;
+            if (this._diffuseTextureName !== undefined) {
+                this._diffuseTexture = TSE.TextureManager.getTexture(this._diffuseTextureName);
+            }
+        }
+        destroy() {
+            TSE.TextureManager.releaseTexture(this._diffuseTextureName);
+            this._diffuseTexture = undefined;
+        }
+    }
+    TSE.Material = Material;
+})(TSE || (TSE = {}));
+
+var TSE;
+(function (TSE) {
+    class MaterialReferenceNode {
+        constructor(material) {
+            this.referenceCount = 1;
+            this.material = material;
+        }
+    }
+    class MaterialManager {
+        constructor() {
+        }
+        static registerMaterial(material) {
+            if (MaterialManager._materials[material.name] === undefined) {
+                MaterialManager._materials[material.name] = new MaterialReferenceNode(material);
+            }
+        }
+        static getMaterial(materialName) {
+            if (MaterialManager._materials[materialName] === undefined) {
+                return undefined;
+            }
+            else {
+                MaterialManager._materials[materialName].referenceCount++;
+                return MaterialManager._materials[materialName].material;
+            }
+        }
+        static releaseMaterial(materialName) {
+            if (MaterialManager._materials[materialName] === undefined) {
+                console.warn("Cannot release a material which has not been registered.");
+            }
+            else {
+                MaterialManager._materials[materialName].referenceCount--;
+                if (MaterialManager._materials[materialName].referenceCount < 1) {
+                    MaterialManager._materials[materialName].material.destroy();
+                    MaterialManager._materials[materialName].material = undefined;
+                    delete MaterialManager._materials[materialName];
+                }
+            }
+        }
+    }
+    MaterialManager._materials = {};
+    TSE.MaterialManager = MaterialManager;
 })(TSE || (TSE = {}));
 
 var TSE;

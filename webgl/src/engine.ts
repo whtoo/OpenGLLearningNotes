@@ -33,7 +33,8 @@ namespace TSE {
             this.loadShaders()
             this._shader.use()
             this._projectionMatrix = Matrix4f.orthorthographic(0,this._canvas.clientWidth,0,this._canvas.clientHeight,-1,100)
-            this._sprite = new Sprite("test",'texturezero.png')
+            MaterialManager.registerMaterial(new Material('zero','texturezero.png',new Color(255,128,0,255)))
+            this._sprite = new Sprite("test",'zero')
             this._sprite.position.x = 100
             this._sprite.position.y = 200
             this._modelMatrix = Matrix4f.translation(this._sprite.position)
@@ -58,9 +59,6 @@ namespace TSE {
 
             let projectionPos = this._shader.getUniformLocation('u_projection')
             gl.uniformMatrix4fv(projectionPos,false,new Float32Array(this._projectionMatrix.data))
-            
-            let modelMatrix = this._shader.getUniformLocation('u_model')
-            gl.uniformMatrix4fv(modelMatrix,false,new Float32Array(this._modelMatrix.data))
         }
 
         private loop(): void {
@@ -71,8 +69,7 @@ namespace TSE {
             this.update( delta );
             /// Render cmd
             gl.clear(gl.COLOR_BUFFER_BIT)
-            let colorPosition = this._shader.getUniformLocation('u_tint')
-            gl.uniform4f(colorPosition,1,1,1,1)
+        
             this.updateMVPMatrix();
             this._sprite.draw(this._shader)
 
