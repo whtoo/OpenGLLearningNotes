@@ -73,7 +73,7 @@ namespace TSE {
             
         }
 
-        public draw(shader:Shader) : void {
+        public draw(shader:BaseShader) : void {
             this._texture.activateAndBind(0)
             let diffuseLocation = shader.getUniformLocation('u_sampler')
             gl.uniform1i(diffuseLocation,0)

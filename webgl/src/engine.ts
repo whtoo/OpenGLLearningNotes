@@ -12,7 +12,7 @@ namespace TSE {
 
         private _count: number = 0;
         private _canvas: HTMLCanvasElement
-        private _shader: Shader
+        private _shader: BaseShader
         // 缓冲区是显卡和CPU交换数据的内存区域,专用于着色器
         private _sprite : Sprite
         private _projectionMatrix : Matrix4f
@@ -33,8 +33,11 @@ namespace TSE {
             this.loadShaders()
             this._shader.use()
             this._projectionMatrix = Matrix4f.orthorthographic(0,this._canvas.clientWidth,0,this._canvas.clientHeight,-1,100)
-            this._modelMatrix = Matrix4f.translation(new Vector3(200,0,0))
             this._sprite = new Sprite("test",'texturezero.png')
+            this._sprite.position.x = 100
+            this._sprite.position.y = 200
+            this._modelMatrix = Matrix4f.translation(this._sprite.position)
+
             this._sprite.load()
 
             this.resize()
@@ -69,7 +72,7 @@ namespace TSE {
             /// Render cmd
             gl.clear(gl.COLOR_BUFFER_BIT)
             let colorPosition = this._shader.getUniformLocation('u_tint')
-            gl.uniform4f(colorPosition,1,0.5,1,1)
+            gl.uniform4f(colorPosition,1,1,1,1)
             this.updateMVPMatrix();
             this._sprite.draw(this._shader)
 
@@ -82,31 +85,7 @@ namespace TSE {
         }
 
         private loadShaders(): void {
-            let vertexShaderSource = `
-            attribute vec3 a_position;
-            attribute vec2 a_texCoord;
-
-            uniform mat4 u_projection;
-            uniform mat4 u_model;
-            varying vec2 v_texCoord;
-
-            void main() {
-                gl_Position = u_projection * u_model *vec4(a_position,1.0);
-                v_texCoord = a_texCoord;
-            }
-            `
-            let fragmentShaderSource = `
-            precision mediump float;
-            uniform vec4 u_tint;
-            uniform sampler2D u_sampler;
-
-            varying vec2 v_texCoord;
-
-            void main() {
-                gl_FragColor = u_tint * texture2D(u_sampler,v_texCoord);
-            }
-            `
-            this._shader = new Shader('base', vertexShaderSource, fragmentShaderSource)
+            this._shader = new BasicShader()
         }
 
     }

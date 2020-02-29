@@ -1,6 +1,6 @@
 {
     "include": [
-        "src/*.ts","src/Assets/*.ts","src/Math/*.ts","src/Message/*.ts","src/Texture/*.ts"
+        "src/*.ts","src/Assets/*.ts","src/Math/*.ts","src/Message/*.ts","src/Texture/*.ts", "src/Shaders/*.ts"
     ],
     "compilerOptions": {
         "noImplicitAny": true,
