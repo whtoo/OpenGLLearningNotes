@@ -1,12 +1,8 @@
 {
-    "include": [
-        "src/*.ts","src/Assets/*.ts","src/Math/*.ts","src/Message/*.ts","src/Texture/*.ts", "src/Shaders/*.ts"
-    ],
-    
+    "include": ["src/*.ts"],
     "compilerOptions": {
         "noImplicitAny": true,
         "target": "es6",
-        "esModuleInterop": true,
         "baseUrl": ".",
         "paths": {
             "three":["node_modules/three/src/Three"],
