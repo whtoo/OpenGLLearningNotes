@@ -1,13 +1,18 @@
 {
     "include": ["src/*.ts"],
     "compilerOptions": {
+        "module": "ES6",
         "noImplicitAny": true,
         "target": "es6",
         "baseUrl": ".",
         "paths": {
             "three":["node_modules/three/src/Three"],
             "gl-matrix":["node_modules/gl-matrix/index"],
-            "orbitcontrols":["node_modules/three/examples/jsm/controls/OrbitControls"]
-        }
+            "orbitcontrols":["node_modules/three/examples/jsm/controls/OrbitControls"],
+            "reflect-metadata":["node_modules/reflect-metadata/index"]
+        },
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "sourceMap": true
     }
 }
