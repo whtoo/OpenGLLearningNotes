@@ -22,7 +22,7 @@ var buildTS = function () {
 };
 
 var buildHtml = async function () {
-    return gulp.src(["src/*.html","src/*.png"])
+    return gulp.src(["resources/*.html","resources/*.png","resources/*.mp4"])
         .pipe(gulp.dest("dist"));
 };
 
