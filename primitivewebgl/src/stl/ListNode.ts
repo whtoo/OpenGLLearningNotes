@@ -1,7 +1,9 @@
+import { Nullable, Maybe } from "./Traits";
+
 export class ListNode<T> {
-    public next: ListNode<T> | null;
-    public prev: ListNode<T> | null;
-    public data: T | undefined;
+    public next: Nullable<ListNode<T>>;
+    public prev: Nullable<ListNode<T>>;
+    public data: Maybe<T>;
     public constructor(data: T | undefined = undefined) {
         this.next = this.prev = null;
         this.data = data;
@@ -45,7 +47,7 @@ export class List<T> {
     }
 
     public contains(data : T) : boolean {
-        for(let link : ListNode<T> | null = this._headNode.next;link !== null && link != this._headNode;link = link.next) {
+        for(let link : Nullable<ListNode<T>> = this._headNode.next;link !== null && link != this._headNode;link = link.next) {
             if(link !== null) {
                 if(link.data !== undefined) {
                     if(data == link.data){
@@ -59,7 +61,7 @@ export class List<T> {
     }
 
     public forNext(cb: (data:T)=>void) : void {
-        for(let link: ListNode<T>|null = this._headNode.next;link!== null&& link != this._headNode;link = link.next) {
+        for(let link: Nullable<ListNode<T>> = this._headNode.next;link!== null&& link != this._headNode;link = link.next) {
             if(link !== null) {
                 if(link.data !== undefined) {
                     cb(link.data)
@@ -69,7 +71,7 @@ export class List<T> {
     }
 
     public forPrev(cb:(data:T)=>void) : void {
-        for(let link: ListNode<T>|null = this._headNode.prev;link!== null&& link != this._headNode;link = link.prev) {
+        for(let link: Nullable<ListNode<T>> = this._headNode.prev;link!== null&& link != this._headNode;link = link.prev) {
             if(link !== null) {
                 if(link.data !== undefined) {
                     cb(link.data)
@@ -91,8 +93,8 @@ export class List<T> {
     }
 
     public remove(node:ListNode<T>):void {
-        let next:ListNode<T>|null = node.next
-        let prev:ListNode<T>|null = node.prev
+        let next:Nullable<ListNode<T>> = node.next
+        let prev:Nullable<ListNode<T>> = node.prev
 
         if(prev !== null){
             prev.next = next
@@ -109,10 +111,10 @@ export class List<T> {
         this.insertBefore(this.end(),data)
     }
 
-    public pop():T|undefined {
-        let prev:ListNode<T>|null = this.end().prev
+    public pop():Maybe<T> {
+        let prev : Nullable<ListNode<T>> = this.end().prev
         if(prev !== null) {
-            let ret:T|undefined = prev.data
+            let ret:Maybe<T> = prev.data
             this.remove(prev)
             return ret
         }
@@ -124,8 +126,8 @@ export class List<T> {
         this.insertBefore(this.begin(),data)
     } 
 
-    public pop_front():T|undefined {
-        let ret:T|undefined = this.begin().data
+    public pop_front():Maybe<T> {
+        let ret:Maybe<T> = this.begin().data
         this.remove(this.begin())
         return ret
     }

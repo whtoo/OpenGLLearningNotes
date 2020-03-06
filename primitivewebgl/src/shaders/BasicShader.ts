@@ -1,7 +1,7 @@
-namespace TSG {
-    export class BasicShader extends BaseShader {
-        public static defaultVertexSrc(): string {
-            const vertexSrc = `
+import { BaseShader , ShaderType } from './Shader'
+export class BasicShader extends BaseShader {
+    public static defaultVertexSrc(): string {
+        const vertexSrc = `
             attribute vec4 aVertexPosition;
             attribute vec3 aVertexNormal;
             attribute vec2 aTextureCoord;
@@ -30,11 +30,11 @@ namespace TSG {
             }
             `
 
-            return vertexSrc
-        }
+        return vertexSrc
+    }
 
-        public static defaultFragmentSrc(): string {
-            const fragmentSrc = `
+    public static defaultFragmentSrc(): string {
+        const fragmentSrc = `
             varying highp vec2 vTextureCoord;
             varying highp vec3 vLighting;
 
@@ -47,19 +47,18 @@ namespace TSG {
             }
             `
 
-            return fragmentSrc
-        }
-
-        public constructor(glContext: WebGLRenderingContext, source: string, type: ShaderType, name: string) {
-            super(glContext, source, type, name)
-        }
-
-        public static createDefaultShader(glContext: WebGLRenderingContext, type: ShaderType, name: string): BasicShader {
-            const src = type === ShaderType.VERTEX_SHADER ? this.defaultVertexSrc() : this.defaultFragmentSrc()
-            let shader = new BasicShader(glContext, src, type, name)
-
-            return shader
-        }
-
+        return fragmentSrc
     }
+
+    public constructor(glContext: WebGLRenderingContext, source: string, type: ShaderType, name: string) {
+        super(glContext, source, type, name)
+    }
+
+    public static createDefaultShader(glContext: WebGLRenderingContext, type: ShaderType, name: string): BasicShader {
+        const src = type === ShaderType.VERTEX_SHADER ? this.defaultVertexSrc() : this.defaultFragmentSrc()
+        let shader = new BasicShader(glContext, src, type, name)
+
+        return shader
+    }
+
 }

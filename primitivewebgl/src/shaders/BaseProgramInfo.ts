@@ -1,9 +1,6 @@
-var mat4 = import("gl-matrix").then((val) => val)
+import { BaseShader , ShaderType, NamedEntity } from './Shader'
 
-namespace TSG {
-    
-
-    export class BaseProgramInfo implements NamedEntity {
+export class BaseProgramInfo implements NamedEntity {
 
         _name: string
         _vertexShader: BaseShader;
@@ -13,10 +10,9 @@ namespace TSG {
         _uniformMaps : {[name:string]:WebGLUniformLocation} = {}
 
 
-        public setUniformMat4f(uniformName:string,val:mat4){
+        public setUniformMat4f(uniformName:string,val:Float32Array){
             const loc = this.getUniformLocation(uniformName)
             this._uniformMaps[uniformName] = loc
-            
         }
 
         getUniformLocation(uniformName:string) : WebGLUniformLocation {
@@ -28,7 +24,8 @@ namespace TSG {
         }
 
         getAttribLocation(attribName:string) : number {
-
+            /// TODO: add impl
+            return 0
         }
 
         public constructor(glContext: WebGLRenderingContext, name: string, vetexSrc: string, fragmentSrc: string) {
@@ -57,4 +54,3 @@ namespace TSG {
         }
 
     }
-}

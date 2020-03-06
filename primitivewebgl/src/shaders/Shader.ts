@@ -1,5 +1,4 @@
-namespace TSG {
-    export interface NamedEntity {
+export interface NamedEntity {
         /**
          * name
          */
@@ -55,6 +54,4 @@ namespace TSG {
         shader(): WebGLShader {
             return this._glShader
         }
-
-    }
 }
