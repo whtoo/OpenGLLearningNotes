@@ -57,7 +57,7 @@ export class NodeT2BEnumerator<T,IdxFunc extends Indexer,Adapter extends IAdapte
         return true
     }
 
-    public get current: Maybe<TreeNode<T>> {
+    public get current() : Maybe<TreeNode<T>> {
         return this._curNode
     }
     
