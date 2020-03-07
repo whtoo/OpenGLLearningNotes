@@ -3,6 +3,8 @@
     "compilerOptions": {
         "module": "ES6",
         "noImplicitAny": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         "target": "ES6",
         "baseUrl": ".",
         "paths": {
