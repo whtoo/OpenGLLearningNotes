@@ -5,8 +5,6 @@ export class TreeNode<T> {
     public name : string
     public data : Maybe<T>
 
-    //TODO:  增加 addChildNode,removeNode,findNode
-
     public constructor(data:Maybe<T> = undefined,  parent: Maybe<TreeNode<T>> = undefined,name:string = ''){
         this._parent = parent
         this._children = undefined
