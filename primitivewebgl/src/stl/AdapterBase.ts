@@ -3,8 +3,8 @@ import { List } from "./ListNode";
 
 export abstract class AdapterBase<T> implements IAdapter<T>{
     protected _arr : Array<T> | List<T>
-    public constructor(userList:boolean = true){
-        if(userList === true){
+    public constructor(useList:boolean = true){
+        if(useList === true){
             this._arr = new List<T>()
         } else {
             this._arr = new Array<T>()
